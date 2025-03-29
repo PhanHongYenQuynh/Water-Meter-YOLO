@@ -1,4 +1,4 @@
-# License Plate Extraction with YOLOv10 and PaddleOCR & Save Data to SQL Database
+# WATER METER Extraction with YOLOv10 and PaddleOCR & Save Data to SQL Database
 
 ## How to run:
 
