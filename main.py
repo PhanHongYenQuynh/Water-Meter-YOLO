@@ -9,7 +9,7 @@ import os
 import sqlite3
 from datetime import datetime
 from paddleocr import PaddleOCR 
-#ALOLAO
+
 # #Create a Video Capture Object
 # cap = cv2.VideoCapture("data/carLicence1.mp4")
 
