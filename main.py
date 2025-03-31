@@ -47,11 +47,25 @@ def paddle_ocr(frame, x1, y1, x2, y2):
     return str(text)
 
 def save_json(water_meter, startTime, endTime):
+    # Tạo danh sách dữ liệu với định dạng tách biệt first_digits và last_two_digits
+    water_meter_data = []
+    for meter in water_meter:
+        if len(meter) >= 2:
+            first_digits = meter[:-2]
+            last_two_digits = meter[-2:]
+        else:
+            first_digits = meter
+            last_two_digits = ""
+        water_meter_data.append({
+            "first_digits": first_digits,
+            "last_two_digits": last_two_digits
+        })
+
     # Tạo file JSON cho mỗi khoảng thời gian
     interval_data = {
         "Start Time": startTime.isoformat(),
         "End Time": endTime.isoformat(),
-        "Water Meter": list(water_meter)
+        "Water Meter": water_meter_data
     }
     interval_file_path = "json/output_" + datetime.now().strftime("%Y%m%d%H%M%S") + ".json"
     with open(interval_file_path, 'w') as f:
