@@ -48,8 +48,10 @@ def paddle_ocr(frame, x1, y1, x2, y2):
 
 def detect_color(frame, x1, y1, x2, y2):
     roi = frame[y1:y2, x1:x2]
-    mean_color = cv2.mean(roi)[:3]  # [B, G, R]
-    if mean_color[2] > mean_color[0] and mean_color[2] > mean_color[1]:  # Kênh đỏ chiếm ưu thế
+    hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+    mean_hsv = cv2.mean(hsv)[:3]  # [H, S, V]
+    # Số đỏ thường trên nền trắng (S thấp), số trắng trên nền đen (S thấp, V thấp)
+    if mean_hsv[1] < 50 and mean_hsv[2] > 200:  # Nền trắng (S thấp, V cao)
         return "red"
     return "white"
 
@@ -99,7 +101,7 @@ def save_json(water_meter, startTime, endTime):
     save_to_database(water_meter, startTime, endTime)
 
 startTime = datetime.now()
-water_meter = []  # Thay set bằng list để lưu dictionary
+water_meter = []  # Dùng list để lưu dictionary
 
 # Xử lý ảnh đơn
 frame = image
