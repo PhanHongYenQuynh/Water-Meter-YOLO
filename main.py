@@ -47,18 +47,18 @@ def paddle_ocr(frame, x1, y1, x2, y2):
     return str(text)
 
 def save_json(water_meter, startTime, endTime):
-    # Tạo danh sách dữ liệu với định dạng tách biệt first_digits và last_two_digits
+    # Tạo danh sách dữ liệu với định dạng tách biệt white_digits và red_digits
     water_meter_data = []
     for meter in water_meter:
-        if len(meter) >= 2:
-            first_digits = meter[:-2]
-            last_two_digits = meter[-2:]
+        if len(meter) >= 4:
+            white_digits = meter[:-3] if len(meter) > 4 else meter[:-2]  # 4 số trắng nếu tổng >= 5 chữ số
+            red_digits = meter[-3:] if len(meter) > 4 else meter[-2:]    # 3 số đỏ hoặc 2 số đỏ
         else:
-            first_digits = meter
-            last_two_digits = ""
+            white_digits = meter  # Nếu ngắn hơn 4, coi như chỉ có số trắng
+            red_digits = ""
         water_meter_data.append({
-            "first_digits": first_digits,
-            "last_two_digits": last_two_digits
+            "white_digits": white_digits,
+            "red_digits": red_digits
         })
 
     # Tạo file JSON cho mỗi khoảng thời gian
