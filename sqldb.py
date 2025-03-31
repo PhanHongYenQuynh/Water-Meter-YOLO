@@ -20,20 +20,8 @@ def save_to_database(water_meter, start_time, end_time):
     conn = sqlite3.connect('water_meter.db')
     cursor = conn.cursor()
     for meter in water_meter:
-        # Tổng số chữ số luôn là 6
-        if len(meter) == 6:
-            # Nếu số đỏ là 3 chữ số (giả định dựa trên giá trị lớn, ví dụ: >= 100)
-            if int(meter[-3:]) >= 100:
-                white_digits = meter[:3]  # 3 số trắng
-                red_digits = meter[3:]    # 3 số đỏ
-            else:
-                white_digits = meter[:4]  # 4 số trắng
-                red_digits = meter[4:]    # 2 số đỏ
-        else:
-            # Nếu không đủ 6 chữ số (trường hợp lỗi), giữ nguyên toàn bộ làm số trắng
-            white_digits = meter
-            red_digits = ""
-        
+        white_digits = meter["white_digits"]
+        red_digits = meter["red_digits"]
         cursor.execute('''
             INSERT INTO WT (start_time, end_time, white_digits, red_digits)
             VALUES (?, ?, ?, ?)

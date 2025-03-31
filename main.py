@@ -46,27 +46,36 @@ def paddle_ocr(frame, x1, y1, x2, y2):
     text = text.replace("粤", "")
     return str(text)
 
+def detect_color(frame, x1, y1, x2, y2):
+    roi = frame[y1:y2, x1:x2]
+    mean_color = cv2.mean(roi)[:3]  # [B, G, R]
+    if mean_color[2] > mean_color[0] and mean_color[2] > mean_color[1]:  # Kênh đỏ chiếm ưu thế
+        return "red"
+    return "white"
+
+def split_digits_by_color(frame, x1, y1, x2, y2, text):
+    # Chia vùng bounding box thành các phần nhỏ tương ứng với từng chữ số
+    width_per_digit = (x2 - x1) // len(text)
+    white_digits = ""
+    red_digits = ""
+    for i, char in enumerate(text):
+        sub_x1 = x1 + i * width_per_digit
+        sub_x2 = sub_x1 + width_per_digit
+        color = detect_color(frame, sub_x1, y1, sub_x2, y2)
+        if color == "white":
+            white_digits += char
+        elif color == "red":
+            red_digits += char
+    return white_digits, red_digits
+
 def save_json(water_meter, startTime, endTime):
-    # Tạo danh sách dữ liệu với định dạng tách biệt white_digits và red_digits
     water_meter_data = []
     for meter in water_meter:
-        if len(meter) == 6:
-            # Nếu số đỏ là 3 chữ số (giả định dựa trên giá trị lớn, ví dụ: >= 100)
-            if int(meter[-3:]) >= 100:
-                white_digits = meter[:3]  # 3 số trắng
-                red_digits = meter[3:]    # 3 số đỏ
-            else:
-                white_digits = meter[:4]  # 4 số trắng
-                red_digits = meter[4:]    # 2 số đỏ
-        else:
-            white_digits = meter  # Nếu không đủ 6 chữ số, giữ nguyên
-            red_digits = ""
         water_meter_data.append({
-            "white_digits": white_digits,
-            "red_digits": red_digits
+            "white_digits": meter["white_digits"],
+            "red_digits": meter["red_digits"]
         })
 
-    # Tạo file JSON cho mỗi khoảng thời gian
     interval_data = {
         "Start Time": startTime.isoformat(),
         "End Time": endTime.isoformat(),
@@ -76,7 +85,6 @@ def save_json(water_meter, startTime, endTime):
     with open(interval_file_path, 'w') as f:
         json.dump(interval_data, f, indent=2)
 
-    # File JSON tích lũy
     cummulative_file_path = "json/WT.json"
     if os.path.exists(cummulative_file_path):
         with open(cummulative_file_path, 'r') as f:
@@ -88,11 +96,10 @@ def save_json(water_meter, startTime, endTime):
     with open(cummulative_file_path, 'w') as f:
         json.dump(existing_data, f, indent=2)
 
-    # Lưu dữ liệu vào cơ sở dữ liệu
     save_to_database(water_meter, startTime, endTime)
 
 startTime = datetime.now()
-water_meter = set()
+water_meter = []  # Thay set bằng list để lưu dictionary
 
 # Xử lý ảnh đơn
 frame = image
@@ -112,7 +119,8 @@ for result in results:
         conf = math.ceil(box.conf[0] * 100) / 100
         label = paddle_ocr(frame, x1, y1, x2, y2)
         if label:
-            water_meter.add(label)
+            white_digits, red_digits = split_digits_by_color(frame, x1, y1, x2, y2, label)
+            water_meter.append({"white_digits": white_digits, "red_digits": red_digits})
         textSize = cv2.getTextSize(label, 0, fontScale=0.5, thickness=2)[0]
         c2 = x1 + textSize[0], y1 - textSize[1] - 3
         cv2.rectangle(frame, (x1, y1), c2, (255, 0, 0), -1)
