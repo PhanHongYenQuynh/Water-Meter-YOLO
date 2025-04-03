@@ -10,12 +10,12 @@ from paddleocr import PaddleOCR
 from sqldb import save_to_database  # Import hàm từ sqldb.py
 
 # Tạo đối tượng ảnh
-image = cv2.imread("data/carImage2.png")
+image = cv2.imread("WT/WT1.jpg")
 if image is None:
     print("Không thể đọc được file ảnh!")
     exit()
 
-# Khởi tạo mô hình YOLOv10
+# Khởi tạo mô hình YOLOv12
 model = YOLO("weights/best.pt")
 
 # Khởi tạo biến đếm khung hình
@@ -39,7 +39,7 @@ def paddle_ocr(frame, x1, y1, x2, y2):
             scores = int(scores * 100)
         if scores > 60:
             text = r[0][0]
-    pattern = re.compile('[\W]')
+    pattern = re.compile(r'[\W]')
     text = pattern.sub('', text)
     text = text.replace("???", "")
     text = text.replace("O", "0")
